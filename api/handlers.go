@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"computer-use/domain"
+	"computer-use/planner"
 	"computer-use/store"
 )
 
@@ -14,11 +15,12 @@ import (
 type Server struct {
 	manager *RunManager
 	store   *store.Store
+	planner *planner.Planner
 }
 
 // NewServer creates and returns a configured HTTP server.
-func NewServer(manager *RunManager, s *store.Store) *Server {
-	return &Server{manager: manager, store: s}
+func NewServer(manager *RunManager, s *store.Store, p *planner.Planner) *Server {
+	return &Server{manager: manager, store: s, planner: p}
 }
 
 // Handler returns the HTTP handler for the server.
@@ -29,6 +31,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /runs/{id}", s.handleGetRun)
 	mux.HandleFunc("POST /runs/{id}/resume", s.handleResumeRun)
 	mux.HandleFunc("GET /capabilities/{id}", s.handleGetCapability)
+	mux.HandleFunc("POST /plan", s.handlePlan)
 	return mux
 }
 
@@ -220,4 +223,59 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 
 func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
+}
+
+// ── POST /plan ────────────────────────────────────────────────────────────────
+
+// PlanHTTPRequest is the body of POST /plan.
+type PlanHTTPRequest struct {
+	Instruction  string              `json:"instruction"`
+	PageContext  planner.PageContext  `json:"page_context"`
+	CapabilityID string              `json:"capability_id"`
+	Params       []domain.ParamDef   `json:"params"`
+	SafetyPolicy domain.SafetyPolicy `json:"safety_policy"`
+	// If true, the resulting capability is saved to the store immediately.
+	Save bool `json:"save"`
+}
+
+func (s *Server) handlePlan(w http.ResponseWriter, r *http.Request) {
+	if s.planner == nil {
+		writeError(w, http.StatusServiceUnavailable, "planner not configured (no LLM client)")
+		return
+	}
+
+	var req PlanHTTPRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
+	if req.Instruction == "" {
+		writeError(w, http.StatusBadRequest, "'instruction' is required")
+		return
+	}
+	if req.CapabilityID == "" {
+		writeError(w, http.StatusBadRequest, "'capability_id' is required")
+		return
+	}
+
+	cap, err := s.planner.Plan(r.Context(), planner.PlanRequest{
+		Instruction:  req.Instruction,
+		PageContext:  req.PageContext,
+		CapabilityID: req.CapabilityID,
+		Params:       req.Params,
+		SafetyPolicy: req.SafetyPolicy,
+	})
+	if err != nil {
+		writeError(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+
+	if req.Save {
+		if err := s.store.SaveCapability(cap); err != nil {
+			log.Printf("warn: could not save capability after planning: %v", err)
+		}
+	}
+
+	log.Printf("planned capability %s with %d steps", cap.ID, len(cap.Steps))
+	writeJSON(w, http.StatusOK, cap)
 }

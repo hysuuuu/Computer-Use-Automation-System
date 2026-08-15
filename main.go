@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"log"
@@ -9,6 +10,7 @@ import (
 
 	"computer-use/api"
 	"computer-use/domain"
+	"computer-use/planner"
 	"computer-use/replay"
 	"computer-use/store"
 	"computer-use/stub"
@@ -32,13 +34,18 @@ func main() {
 	}
 
 	// BrowserFactory creates a fresh stub browser per run.
-	// Swap this out for a real Playwright-backed browser in production.
 	factory := func() replay.Browser {
 		return stub.New("about:blank")
 	}
 
 	manager := api.NewRunManager(s, factory, *baseURL)
-	server := api.NewServer(manager, s)
+
+	// Stub LLM: returns a fixed SauceDemo login capability for any prompt.
+	// Replace with a real OpenAI/Gemini client for production use.
+	stubLLM := &stubLLMClient{}
+	p := planner.New(stubLLM)
+
+	server := api.NewServer(manager, s, p)
 
 	log.Printf("computer-use server listening on %s", *addr)
 	log.Printf("data directory: %s", *dataDir)
@@ -180,4 +187,28 @@ func seedDemoCapability(s *store.Store) error {
 	data, _ := json.MarshalIndent(cap, "", "  ")
 	log.Printf("seeding capability:\n%s", data)
 	return s.SaveCapability(cap)
+}
+
+// stubLLMClient is a development-only LLM that returns a pre-canned SauceDemo
+// login capability for any prompt. Replace with openai.Client or similar.
+type stubLLMClient struct{}
+
+func (s *stubLLMClient) Complete(_ context.Context, _ string) (string, error) {
+	// Return a minimal valid capability JSON for any prompt.
+	return `{
+  "id": "cap_planned",
+  "version": 1,
+  "description": "Planned capability (stub LLM)",
+  "target": {"url": "https://www.saucedemo.com", "application": "saucedemo"},
+  "steps": [
+    {
+      "id": "step_001",
+      "type": "action",
+      "description": "Navigate to target",
+      "action": {"kind": "navigate", "value": "https://www.saucedemo.com"},
+      "risk": "low",
+      "on_error": {"strategy": "fail_fast"}
+    }
+  ]
+}`, nil
 }
