@@ -1,0 +1,49 @@
+{
+  "run_id": "run_1786829585478289321",
+  "capability_id": "cap_saucedemo_login_v1",
+  "version": 1,
+  "params": {
+    "password": "[REDACTED]",
+    "username": "standard_user"
+  },
+  "status": "success",
+  "steps": [
+    {
+      "step_id": "step_001",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_002",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_003",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_004",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_005",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_006",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_007",
+      "status": "passed",
+      "duration_ms": 0
+    }
+  ],
+  "started_at": "2026-08-15T14:33:05.478414309-07:00",
+  "finished_at": "2026-08-15T14:33:05.478527448-07:00"
+}

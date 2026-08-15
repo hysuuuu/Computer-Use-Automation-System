@@ -1,0 +1,200 @@
+{
+  "id": "cap_saucedemo_login_v1",
+  "version": 1,
+  "description": "Log in to SauceDemo and verify successful landing on inventory page",
+  "target": {
+    "url": "https://www.saucedemo.com",
+    "application": "saucedemo",
+    "description": "Sauce Labs demo e-commerce site"
+  },
+  "params": [
+    {
+      "name": "username",
+      "type": "string",
+      "description": "Login username",
+      "required": true
+    },
+    {
+      "name": "password",
+      "type": "secret",
+      "description": "Login password",
+      "required": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_001",
+      "type": "action",
+      "description": "Navigate to login page",
+      "action": {
+        "kind": "navigate",
+        "value": "https://www.saucedemo.com"
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "id": "step_002",
+      "type": "action",
+      "description": "Fill username field",
+      "locator": {
+        "primary": {
+          "kind": "test-id",
+          "value": "username"
+        },
+        "fallbacks": [
+          {
+            "kind": "css",
+            "value": "#user-name"
+          }
+        ]
+      },
+      "action": {
+        "kind": "fill",
+        "value": "{{username}}"
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 3000
+    },
+    {
+      "id": "step_003",
+      "type": "action",
+      "description": "Fill password field",
+      "locator": {
+        "primary": {
+          "kind": "test-id",
+          "value": "password"
+        },
+        "fallbacks": [
+          {
+            "kind": "css",
+            "value": "#password"
+          }
+        ]
+      },
+      "action": {
+        "kind": "fill",
+        "value": "{{password}}"
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 3000
+    },
+    {
+      "id": "step_004",
+      "type": "action",
+      "description": "Click login button",
+      "locator": {
+        "primary": {
+          "kind": "test-id",
+          "value": "login-button"
+        },
+        "fallbacks": [
+          {
+            "kind": "role",
+            "value": "button",
+            "name": "Login"
+          }
+        ]
+      },
+      "action": {
+        "kind": "click"
+      },
+      "risk": "medium",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 3000
+    },
+    {
+      "id": "step_005",
+      "type": "branch",
+      "description": "Check whether login failed",
+      "branch": {
+        "condition": {
+          "kind": "text_visible",
+          "expected": "Epic sadface",
+          "is_business_outcome": false
+        },
+        "if_true": [
+          "step_005_err"
+        ],
+        "if_false": [
+          "step_006"
+        ]
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 0
+    },
+    {
+      "id": "step_005_err",
+      "type": "assert",
+      "description": "Record login rejection as a business error",
+      "assert": {
+        "kind": "text_visible",
+        "expected": "Epic sadface",
+        "is_business_outcome": true
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 0
+    },
+    {
+      "id": "step_006",
+      "type": "assert",
+      "description": "Verify we landed on the inventory page",
+      "assert": {
+        "kind": "url_contains",
+        "expected": "/inventory.html",
+        "is_business_outcome": false
+      },
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "retry",
+        "max_retries": 2,
+        "retry_delay_ms": 1000
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "id": "step_007",
+      "type": "checkpoint",
+      "description": "Login successful — safe savepoint for partial replay",
+      "risk": "low",
+      "requires_approval": false,
+      "on_error": {
+        "strategy": "fail_fast"
+      },
+      "timeout_ms": 0
+    }
+  ],
+  "safety_policy": {
+    "max_risk_allowed": "medium",
+    "require_approval_at": "high",
+    "allowed_domains": [
+      "saucedemo.com"
+    ]
+  },
+  "created_at": "2026-08-15T14:33:02.782377953-07:00",
+  "created_by": "seed"
+}
