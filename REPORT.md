@@ -93,3 +93,16 @@ The `SafetyPolicy` is operator-controlled. The planner injects it verbatim from 
 **Planner self-healing loop.** The current planner calls the LLM once and either succeeds or fails. A production planner would run an observe-decide-act loop until the goal is confirmed complete, with a step budget to prevent runaway execution.
 
 **Confidence scoring and approval gates.** Capabilities have no stability score. A capability that has replayed successfully 50 times should have a different approval status than one that has never been tested. The schema has a `version` field that could support this; the logic does not exist yet.
+
+## Post-Implementation Architectural Notes & Known Limitations
+
+During our final integration testing with the real Chromium browser, we identified three architectural trade-offs that we explicitly decided to cut for this assignment scope:
+
+### 1. Multi-Tenant Memory Bottleneck
+Our current backend isolation model uses OS-level process boundaries. Calling `pwbrowser.Launch()` spawns a new Node.js subprocess and a completely new Chromium instance for every single run. While this provides perfect multi-tenant isolation, it is extremely memory-intensive. In a production backend, we would rewrite the bridge to connect to a single persistent Playwright server and isolate runs using `browser.newContext()` instead.
+
+### 2. Escalation CLI Behavior
+When running via the `replay-runner` CLI, hitting a `requires_approval: true` step causes the engine to return an `EscalationError` and cleanly exit, which closes the browser. To make this tool useful for local debugging, we would need to implement an interactive prompt (e.g., `Approve? (y/n)`) that pauses the Go routine without tearing down the browser session. 
+
+### 3. API Server Resume Mechanics
+The `api/manager.go` implements an HTTP-based pause/resume state machine. However, currently `engine.Run()` exits completely upon escalation. When the API server receives the `POST /resume` approval, it updates the `Run.Status` to `Success` but does not actually re-inject the final command into the browser (since the browser has closed). True "resume" capability requires the Engine's main loop to block internally on a channel, keeping the Playwright session alive while waiting for the API signal. For this assignment, we modeled the *state* of escalation but skipped the complex async blocking mechanics.
