@@ -1,0 +1,78 @@
+{
+  "run_id": "run_1787001895236555883",
+  "capability_id": "cap_saucedemo_checkout_v1",
+  "version": 1,
+  "params": {
+    "first_name": "John",
+    "item_name": "sauce-labs-backpack",
+    "last_name": "Doe",
+    "password": "[REDACTED]",
+    "username": "standard_user",
+    "zip": "12345"
+  },
+  "status": "escalated",
+  "steps": [
+    {
+      "step_id": "step_nav",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_user",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_pass",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_click",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_branch_login",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_add_cart",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_go_cart",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_click_checkout",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_fill_first_name",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_fill_last_name",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_fill_zip",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_click_continue",
+      "status": "passed",
+      "duration_ms": 0
+    }
+  ],
+  "started_at": "2026-08-17T14:24:55.236575739-07:00",
+  "finished_at": "2026-08-17T14:24:55.236799037-07:00"
+}

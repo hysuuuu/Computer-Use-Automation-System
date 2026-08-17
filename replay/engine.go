@@ -296,6 +296,9 @@ func (e *Engine) evaluate(ctx context.Context, stepID string, a domain.Assertion
 	switch a.Kind {
 	case domain.AssertionKindTextVisible:
 		met, err = e.browser.TextVisible(ctx, expected)
+	case domain.AssertionKindTextNotVisible:
+		visible, verr := e.browser.TextVisible(ctx, expected)
+		met, err = !visible, verr
 	case domain.AssertionKindURLContains:
 		met, err = e.browser.URLContains(ctx, expected)
 	case domain.AssertionKindElementExists:

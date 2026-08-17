@@ -1,0 +1,55 @@
+{
+  "run_id": "run_1787001993774985374",
+  "capability_id": "cap_saucedemo_checkout_v1",
+  "version": 1,
+  "params": {
+    "first_name": "John",
+    "item_name": "sauce-labs-backpack",
+    "last_name": "Doe",
+    "password": "[REDACTED]",
+    "username": "standard_user",
+    "zip": "12345"
+  },
+  "status": "business_error",
+  "steps": [
+    {
+      "step_id": "step_nav",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_user",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_pass",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_login_click",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_branch_login",
+      "status": "passed",
+      "duration_ms": 0
+    },
+    {
+      "step_id": "step_err_bad_login",
+      "status": "failed",
+      "err": "business error at step step_err_bad_login: expected business outcome: \"Epic sadface\" not found",
+      "duration_ms": 0
+    }
+  ],
+  "started_at": "2026-08-17T14:26:33.775035518-07:00",
+  "finished_at": "2026-08-17T14:26:33.775209228-07:00",
+  "error_class": {
+    "category": "business_rule",
+    "step_id": "step_err_bad_login",
+    "message": "expected business outcome: \"Epic sadface\" not found",
+    "is_retryable": false
+  }
+}
