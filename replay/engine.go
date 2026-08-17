@@ -138,6 +138,15 @@ func (e *Engine) dispatch(ctx context.Context, step domain.Step) (nextStepID str
 		if err != nil && result.Status == "" {
 			result.Status = domain.StepStatusFailed
 			result.Err = err.Error()
+
+			// Take a screenshot on failure or escalation
+			// Use a short timeout so we don't hang the teardown
+			ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			filename := fmt.Sprintf("evidence/failure_%s_%s.png", e.opts.RunID, step.ID)
+			if path, shotErr := e.browser.Screenshot(ctxTimeout, filename); shotErr == nil {
+				result.Screenshot = path
+			}
 		}
 		e.results = append(e.results, result)
 	}()
