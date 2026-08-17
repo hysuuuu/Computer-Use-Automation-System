@@ -124,11 +124,6 @@ func (e *Engine) Run(ctx context.Context, params map[string]string) (*domain.Run
 // dispatch routes a step to the correct handler and returns the next step ID
 // (non-empty only for Branch steps) or an error.
 func (e *Engine) dispatch(ctx context.Context, step domain.Step) (nextStepID string, err error) {
-	// Safety gate: pause before critical/approved steps.
-	if step.RequiresApproval || step.Risk == domain.RiskCritical {
-		return "", e.escalate(step)
-	}
-
 	start := time.Now()
 	var result domain.StepResult
 
@@ -140,16 +135,20 @@ func (e *Engine) dispatch(ctx context.Context, step domain.Step) (nextStepID str
 			result.Err = err.Error()
 
 			// Take a screenshot on failure or escalation
-			// Use a short timeout so we don't hang the teardown
 			ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			filename := fmt.Sprintf("evidence/failure_%s_%s.png", e.opts.RunID, step.ID)
+			filename := fmt.Sprintf("failure_%s_%s", e.opts.RunID, step.ID)
 			if path, shotErr := e.browser.Screenshot(ctxTimeout, filename); shotErr == nil {
 				result.Screenshot = path
 			}
 		}
 		e.results = append(e.results, result)
 	}()
+
+	// Safety gate: pause before critical/approved steps.
+	if step.RequiresApproval || step.Risk == domain.RiskCritical {
+		return "", e.escalate(step)
+	}
 
 	switch step.Type {
 	case domain.StepTypeAction:
