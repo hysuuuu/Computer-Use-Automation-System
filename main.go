@@ -6,10 +6,12 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"computer-use/api"
 	"computer-use/domain"
+	"computer-use/llm"
 	"computer-use/planner"
 	"computer-use/replay"
 	"computer-use/store"
@@ -40,10 +42,16 @@ func main() {
 
 	manager := api.NewRunManager(s, factory, *baseURL)
 
-	// Stub LLM: returns a fixed SauceDemo login capability for any prompt.
-	// Replace with a real OpenAI/Gemini client for production use.
-	stubLLM := &stubLLMClient{}
-	p := planner.New(stubLLM)
+	// Use real OpenAI client if API key is set, otherwise fallback to stub
+	var llmClient planner.LLMClient
+	if os.Getenv("OPENAI_API_KEY") != "" {
+		llmClient = llm.NewOpenAIClient()
+		log.Println("Using real OpenAI client for planner")
+	} else {
+		log.Println("warn: OPENAI_API_KEY not set, using stub LLM client")
+		llmClient = &stubLLMClient{}
+	}
+	p := planner.New(llmClient)
 
 	server := api.NewServer(manager, s, p)
 

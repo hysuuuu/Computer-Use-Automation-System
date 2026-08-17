@@ -17,6 +17,7 @@ The target application for the demo is [saucedemo.com](https://www.saucedemo.com
 ## Setup
 
 **Requirements:**
+
 - Go 1.23+
 - Node.js 18+ and npm (for the discovery agent)
 - Internet access to reach saucedemo.com
@@ -38,9 +39,26 @@ All 19 tests should pass in under a second. No API keys are needed to run the te
 
 ---
 
-## Running without live services (stub mode)
+## Running the API Server
 
-The server starts in stub mode by default. The stub browser logs every action and returns success without opening a real browser, so you can test the full API surface locally with no external dependencies.
+The API server can operate in two modes: **Stub Mode** (default) and **Real LLM Mode**.
+
+### 1. Real LLM Mode (OpenAI / Gemini / Anthropic)
+
+If you provide an `OPENAI_API_KEY`, the server will wire up the real `LLMClient` to dynamically generate capabilities using the OpenAI Chat Completions API.
+
+```bash
+export OPENAI_API_KEY="sk-..."
+export OPENAI_MODEL="gpt-4o"  # optional, defaults to gpt-4o
+export GO111MODULE=on
+go run . --addr :8080 --data-dir ./data
+```
+
+_(Note: You can override the base URL via `OPENAI_BASE_URL` to use drop-in replacements like Groq or vLLM)._
+
+### 2. Stub Mode (No LLM required)
+
+If no API key is provided, the server falls back to a mock `stubLLMClient` that safely returns a pre-canned capability template. This lets you test the API surface locally without external dependencies.
 
 ```bash
 export GO111MODULE=on
@@ -101,7 +119,11 @@ Type your next action as JSON and press Enter:
 You respond with:
 
 ```json
-{"action":"fill","selector":"[data-test='username']","value":"standard_user"}
+{
+  "action": "fill",
+  "selector": "[data-test='username']",
+  "value": "standard_user"
+}
 ```
 
 Continue until the goal is complete, then emit the final `done` action with the capability JSON. The script writes the artifact to `evidence/<capability-id>.json` and the full session transcript to `evidence/discovery_transcript.md`.
@@ -146,19 +168,3 @@ cmd/discover/  Node.js interactive discovery agent (Playwright + stdin).
 cmd/replay/    Go CLI for running a capability and writing an audit log.
 evidence/      Saved capability, discovery transcript, and replay audit logs.
 ```
-
----
-
-## Keys and config
-
-No API keys are required for the stub mode, tests, or the replay runner. The server uses file-based storage by default under `./data`.
-
-To run the discovery agent with a real LLM instead of typing commands manually, implement the `LLMClient` interface in `planner/planner.go` and wire it in `main.go` where `stubLLMClient` is constructed. The interface is one method: `Complete(ctx, prompt) (string, error)`.
-
-```go
-type LLMClient interface {
-    Complete(ctx context.Context, prompt string) (string, error)
-}
-```
-
-Any OpenAI-compatible or Gemini client wraps into this in about ten lines.
