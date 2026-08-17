@@ -106,3 +106,6 @@ When running via the `replay-runner` CLI, hitting a `requires_approval: true` st
 
 ### 3. API Server Resume Mechanics
 The `api/manager.go` implements an HTTP-based pause/resume state machine. However, currently `engine.Run()` exits completely upon escalation. When the API server receives the `POST /resume` approval, it updates the `Run.Status` to `Success` but does not actually re-inject the final command into the browser (since the browser has closed). True "resume" capability requires the Engine's main loop to block internally on a channel, keeping the Playwright session alive while waiting for the API signal. For this assignment, we modeled the *state* of escalation but skipped the complex async blocking mechanics.
+
+### 4. Dynamic Locator Fallback Execution
+While the `Capability` schema fully supports and records a prioritized fallback chain (`test-id` > `role` > `css`), the current Playwright adapter (`pwbrowser/browser.go`) only evaluates the `Primary` selector. In a production scenario, methods like `Click` and `Fill` would catch Playwright timeout exceptions and iterate through the `loc.Fallbacks` array to dynamically retry the action. We have documented the structural design for fallback resilience, but simplified the engine runtime to only execute the primary path.
