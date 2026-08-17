@@ -66,40 +66,33 @@ function logStep(role, content) {
  * accessibility tree. This is what we show the LLM instead of raw HTML.
  */
 async function extractA11yTree(page) {
-  const snapshot = await page.accessibility.snapshot({ interestingOnly: true });
-  const elements = [];
+  const elements = await page.evaluate(() => {
+    const interactives = document.querySelectorAll('button, a, input, select, textarea, [role="button"], [role="link"], [role="checkbox"], [tabindex]:not([tabindex="-1"])');
+    return Array.from(interactives).map(el => {
+      const isVisible = el.offsetWidth > 0 && el.offsetHeight > 0;
+      if (!isVisible) return null;
+      return {
+        role: el.tagName.toLowerCase(),
+        name: (el.textContent || el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').trim().slice(0, 50),
+        value: el.value || '',
+        disabled: el.disabled || false,
+        checked: el.checked || false
+      };
+    }).filter(Boolean);
+  });
 
-  function walk(node, depth) {
-    if (!node) return;
-    const interactiveRoles = [
-      'button','link','textbox','checkbox','radio','combobox',
-      'listbox','option','menuitem','tab','searchbox','spinbutton',
-      'slider','switch','treeitem','gridcell',
-    ];
-    const isInteractive = interactiveRoles.includes(node.role) || node.focusable;
-    if (isInteractive && node.name) {
-      elements.push({
-        role:     node.role,
-        name:     node.name,
-        value:    node.value,
-        disabled: node.disabled,
-        checked:  node.checked,
-        // test-id is not in the a11y snapshot; we need to query for it separately
-      });
-    }
-    if (node.children) node.children.forEach(c => walk(c, depth + 1));
-  }
-  walk(snapshot, 0);
-
-  // Also grab test-ids for interactive elements (huge value for stable selectors)
   const testIds = await page.evaluate(() => {
     const els = document.querySelectorAll('[data-test],[data-testid],[data-test-id]');
-    return Array.from(els).map(el => ({
-      tag:    el.tagName.toLowerCase(),
-      testId: el.getAttribute('data-test') || el.getAttribute('data-testid') || el.getAttribute('data-test-id'),
-      type:   el.getAttribute('type'),
-      text:   el.textContent.trim().slice(0, 60),
-    }));
+    return Array.from(els).map(el => {
+      const isVisible = el.offsetWidth > 0 && el.offsetHeight > 0;
+      if (!isVisible) return null;
+      return {
+        tag:    el.tagName.toLowerCase(),
+        testId: el.getAttribute('data-test') || el.getAttribute('data-testid') || el.getAttribute('data-test-id'),
+        type:   el.getAttribute('type') || '',
+        text:   (el.textContent || el.getAttribute('placeholder') || '').trim().slice(0, 60),
+      };
+    }).filter(Boolean);
   });
 
   return { elements, testIds };
