@@ -1,1 +1,4 @@
-node_modules.private_docs/
+node_modules/
+/bin/
+.private_docs/
+evidence/replay_real_multi_screenshot.json
