@@ -1,5 +1,5 @@
 {
-  "run_id": "run_1787003369265091956",
+  "run_id": "run_1787004189203890589",
   "capability_id": "cap_saucedemo_checkout_v1",
   "version": 1,
   "params": {
@@ -10,46 +10,46 @@
     "username": "standard_user",
     "zip": "12345"
   },
-  "status": "business_error",
+  "status": "hard_failure",
   "steps": [
     {
       "step_id": "step_nav",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 2388
     },
     {
       "step_id": "step_login_user",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 91
     },
     {
       "step_id": "step_login_pass",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 67
     },
     {
       "step_id": "step_login_click",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 121
     },
     {
       "step_id": "step_branch_login",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 3
     },
     {
-      "step_id": "step_err_bad_login",
+      "step_id": "step_add_cart",
       "status": "failed",
-      "err": "business error at step step_err_bad_login: expected business outcome: \"Epic sadface\" not found",
-      "duration_ms": 0
+      "err": "locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for locator('[data-test=\\'add-to-cart-{{item_name}}\\']')\n",
+      "duration_ms": 10053
     }
   ],
-  "started_at": "2026-08-17T14:49:29.265111438-07:00",
-  "finished_at": "2026-08-17T14:49:29.26524407-07:00",
+  "started_at": "2026-08-17T15:03:09.203897173-07:00",
+  "finished_at": "2026-08-17T15:03:21.930490745-07:00",
   "error_class": {
-    "category": "business_rule",
-    "step_id": "step_err_bad_login",
-    "message": "expected business outcome: \"Epic sadface\" not found",
+    "category": "assertion_failed",
+    "step_id": "",
+    "message": "locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for locator('[data-test=\\'add-to-cart-{{item_name}}\\']')\n",
     "is_retryable": false
   }
 }

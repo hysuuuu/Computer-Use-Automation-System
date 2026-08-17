@@ -1,10 +1,9 @@
 {
-  "run_id": "run_1787003331775572648",
-  "capability_id": "cap_saucedemo_checkout_v1",
+  "run_id": "run_1787004254698031983",
+  "capability_id": "cap_saucedemo_multi_item_v1",
   "version": 1,
   "params": {
     "first_name": "John",
-    "item_name": "sauce-labs-backpack",
     "last_name": "Doe",
     "password": "[REDACTED]",
     "username": "standard_user",
@@ -15,64 +14,74 @@
     {
       "step_id": "step_nav",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 2378
     },
     {
       "step_id": "step_login_user",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 89
     },
     {
       "step_id": "step_login_pass",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 61
     },
     {
       "step_id": "step_login_click",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 134
     },
     {
       "step_id": "step_branch_login",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 4
     },
     {
-      "step_id": "step_add_cart",
+      "step_id": "step_add_bike_light",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 140
+    },
+    {
+      "step_id": "step_add_onesie",
+      "status": "passed",
+      "duration_ms": 75
     },
     {
       "step_id": "step_go_cart",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 87
+    },
+    {
+      "step_id": "step_assert_two_items",
+      "status": "passed",
+      "duration_ms": 2
     },
     {
       "step_id": "step_click_checkout",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 77
     },
     {
       "step_id": "step_fill_first_name",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 66
     },
     {
       "step_id": "step_fill_last_name",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 64
     },
     {
       "step_id": "step_fill_zip",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 61
     },
     {
       "step_id": "step_click_continue",
       "status": "passed",
-      "duration_ms": 0
+      "duration_ms": 100
     }
   ],
-  "started_at": "2026-08-17T14:48:51.775593311-07:00",
-  "finished_at": "2026-08-17T14:48:51.775833581-07:00"
+  "started_at": "2026-08-17T15:04:14.698038654-07:00",
+  "finished_at": "2026-08-17T15:04:18.0450023-07:00"
 }

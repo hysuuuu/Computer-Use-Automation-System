@@ -2,19 +2,21 @@
 //
 // Standalone replay runner for evidence generation.
 //
-// Usage:
+// Usage (stub browser, default):
 //
-//	# Successful checkout run
 //	go run ./cmd/replay \
-//	  --capability evidence/cap_saucedemo_checkout_v1.json \
+//	  --capability evidence/cap_checkout.json \
 //	  --params '{"username":"standard_user","password":"secret_sauce","item_name":"sauce-labs-backpack","first_name":"John","last_name":"Doe","zip":"12345"}' \
 //	  --out evidence/replay_success.json
 //
-//	# Business-error run (bad password)
+// Usage (real Chromium browser):
+//
 //	go run ./cmd/replay \
-//	  --capability evidence/cap_saucedemo_checkout_v1.json \
-//	  --params '{"username":"standard_user","password":"wrong_password","item_name":"sauce-labs-backpack","first_name":"John","last_name":"Doe","zip":"12345"}' \
-//	  --out evidence/replay_business_error.json
+//	  --real \
+//	  --chromium /home/hysu/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome \
+//	  --capability evidence/cap_checkout.json \
+//	  --params '{"username":"standard_user","password":"secret_sauce","item_name":"sauce-labs-backpack","first_name":"John","last_name":"Doe","zip":"12345"}' \
+//	  --out evidence/replay_real.json
 //
 // Exit codes:  0 = success,  2 = business_error or escalated,  1 = hard failure
 package main
@@ -30,15 +32,19 @@ import (
 	"time"
 
 	"computer-use/domain"
+	"computer-use/pwbrowser"
 	"computer-use/replay"
 	"computer-use/stub"
 )
 
 func main() {
-	capFile    := flag.String("capability", "", "Path to capability JSON file (required)")
-	paramsJSON := flag.String("params", "{}", "JSON object of runtime parameters")
-	outFile    := flag.String("out", "", "Path to write the Run audit log JSON (required)")
-	evidenceDir := flag.String("evidence-dir", "evidence", "Directory for screenshots and audit logs")
+	capFile     := flag.String("capability",   "",        "Path to capability JSON file (required)")
+	paramsJSON  := flag.String("params",       "{}",      "JSON object of runtime parameters")
+	outFile     := flag.String("out",          "",        "Path to write the Run audit log JSON (required)")
+	evidenceDir := flag.String("evidence-dir", "evidence","Directory for screenshots and audit logs")
+	useReal     := flag.Bool("real",           false,     "Use a real Chromium browser instead of the stub")
+	chromiumPath := flag.String("chromium",   "",        "Path to Chromium executable (used with --real)")
+	headless    := flag.Bool("headless",       true,      "Run Chromium headless (used with --real)")
 	flag.Parse()
 
 	if *capFile == "" || *outFile == "" {
@@ -58,24 +64,39 @@ func main() {
 	log.Printf("Loaded capability %q  (%d steps)", cap.ID, len(cap.Steps))
 
 	// ── Parse runtime params ──────────────────────────────────────────────────
-	// domain.Run.Params is map[string]any but our inputs are strings.
 	var rawParams map[string]string
 	if err := json.Unmarshal([]byte(*paramsJSON), &rawParams); err != nil {
 		log.Fatalf("cannot parse --params JSON: %v", err)
 	}
-	// Convert to map[string]any for the Run struct.
 	params := make(map[string]any, len(rawParams))
 	for k, v := range rawParams {
-		// Redact secret params so they don't appear in the audit log.
 		params[k] = v
 	}
-	// Also build a string map for the engine (it uses map[string]string internally).
 	engineParams := rawParams
 
 	// ── Create browser ────────────────────────────────────────────────────────
-	// Stub browser: logs every action and returns success for all assertions.
-	// Replace with a Playwright browser for production evidence runs.
-	browser := stub.New(cap.Target.URL)
+	var browser replay.Browser
+	var cleanup func()
+
+	if *useReal {
+		log.Printf("Launching real Chromium browser (headless=%v path=%q)...", *headless, *chromiumPath)
+		b, cleanupFn, launchErr := pwbrowser.Launch(pwbrowser.Options{
+			ChromiumPath: *chromiumPath,
+			Headless:     *headless,
+			EvidenceDir:  *evidenceDir,
+			})
+		if launchErr != nil {
+			log.Fatalf("could not launch browser: %v", launchErr)
+		}
+		browser = b
+		cleanup = cleanupFn
+		log.Printf("Browser ready.")
+	} else {
+		log.Printf("Using stub browser (pass --real to use Chromium).")
+		browser = stub.New(cap.Target.URL)
+		cleanup = func() {}
+	}
+	defer cleanup()
 
 	// ── Create engine ─────────────────────────────────────────────────────────
 	runID := fmt.Sprintf("run_%d", time.Now().UnixNano())
@@ -85,7 +106,6 @@ func main() {
 	}
 	engine := replay.NewEngine(browser, &cap, opts)
 
-	// ── Build run skeleton ────────────────────────────────────────────────────
 	log.Printf("Starting run %s", runID)
 
 	// ── Execute ───────────────────────────────────────────────────────────────
@@ -150,7 +170,6 @@ func main() {
 	}
 	log.Printf("Audit log written → %s", *outFile)
 
-	// Exit with non-zero code if the run didn't succeed (useful for CI).
 	switch run.Status {
 	case domain.RunStatusSuccess:
 		os.Exit(0)

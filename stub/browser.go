@@ -41,6 +41,9 @@ func (b *Browser) Click(_ context.Context, loc domain.Locator) error {
 
 func (b *Browser) Fill(_ context.Context, loc domain.Locator, value string) error {
 	log.Printf("[stub] Fill   locator=%s:%s  value=%q", loc.Primary.Kind, loc.Primary.Value, value)
+	if value == "wrong_password" {
+		b.VisibleTexts["Epic sadface"] = true
+	}
 	return nil
 }
 

@@ -1,0 +1,213 @@
+{
+  "id": "cap_saucedemo_multi_item_v1",
+  "version": 1,
+  "description": "Log into SauceDemo, add Sauce Labs Bike Light and Sauce Labs Onesie to cart, then complete the full checkout flow.",
+  "target": {
+    "url": "https://www.saucedemo.com",
+    "application": "saucedemo",
+    "description": "Sauce Labs demo storefront"
+  },
+  "params": [
+    { "name": "username",   "type": "string", "description": "Login username",         "required": true },
+    { "name": "password",   "type": "secret", "description": "Login password",          "required": true },
+    { "name": "first_name", "type": "string", "description": "Checkout first name",     "required": true, "default": "John" },
+    { "name": "last_name",  "type": "string", "description": "Checkout last name",      "required": true, "default": "Doe"  },
+    { "name": "zip",        "type": "string", "description": "Checkout postal code",    "required": true, "default": "12345"}
+  ],
+  "safety_policy": {
+    "max_risk_allowed": "medium",
+    "require_approval_at": "high",
+    "allowed_domains": ["saucedemo.com"]
+  },
+  "created_at": "2026-08-17T21:51:00Z",
+  "created_by": "human",
+  "steps": [
+    {
+      "id": "step_nav",
+      "type": "action",
+      "description": "Navigate to login page",
+      "risk": "low",
+      "action": { "kind": "navigate", "value": "https://www.saucedemo.com" },
+      "on_error": { "strategy": "fail_fast" },
+      "timeout_ms": 10000
+    },
+    {
+      "id": "step_login_user",
+      "type": "action",
+      "description": "Fill username",
+      "risk": "low",
+      "locator": {
+        "primary":   { "kind": "test-id", "value": "username" },
+        "fallbacks": [{ "kind": "css",     "value": "#user-name" }]
+      },
+      "action": { "kind": "fill", "value": "{{username}}" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_login_pass",
+      "type": "action",
+      "description": "Fill password",
+      "risk": "low",
+      "locator": {
+        "primary":   { "kind": "test-id", "value": "password" },
+        "fallbacks": [{ "kind": "css",     "value": "#password" }]
+      },
+      "action": { "kind": "fill", "value": "{{password}}" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_login_click",
+      "type": "action",
+      "description": "Click login button",
+      "risk": "medium",
+      "locator": {
+        "primary":   { "kind": "test-id", "value": "login-button" },
+        "fallbacks": [{ "kind": "css",     "value": "#login-button" }]
+      },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_branch_login",
+      "type": "branch",
+      "description": "Check if login failed",
+      "risk": "low",
+      "branch": {
+        "condition": {
+          "kind": "text_visible",
+          "expected": "Epic sadface",
+          "is_business_outcome": false
+        },
+        "if_true":  ["step_err_bad_login"],
+        "if_false": ["step_add_bike_light"]
+      },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_err_bad_login",
+      "type": "assert",
+      "description": "Halt with business error on bad credentials",
+      "risk": "low",
+      "assert": {
+        "kind": "text_not_visible",
+        "expected": "Epic sadface",
+        "is_business_outcome": true
+      },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_add_bike_light",
+      "type": "action",
+      "description": "Add Sauce Labs Bike Light to cart",
+      "risk": "low",
+      "locator": {
+        "primary":   { "kind": "test-id", "value": "add-to-cart-sauce-labs-bike-light" },
+        "fallbacks": [{ "kind": "text",    "value": "Add to cart" }]
+      },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_add_onesie",
+      "type": "action",
+      "description": "Add Sauce Labs Onesie to cart",
+      "risk": "low",
+      "locator": {
+        "primary":   { "kind": "test-id", "value": "add-to-cart-sauce-labs-onesie" },
+        "fallbacks": [{ "kind": "text",    "value": "Add to cart" }]
+      },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_go_cart",
+      "type": "action",
+      "description": "Open shopping cart",
+      "risk": "low",
+      "locator": {
+        "primary": { "kind": "css", "value": ".shopping_cart_link" }
+      },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_assert_two_items",
+      "type": "assert",
+      "description": "Verify both items are in the cart",
+      "risk": "low",
+      "assert": {
+        "kind": "text_visible",
+        "expected": "Sauce Labs Bike Light",
+        "is_business_outcome": false
+      },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_click_checkout",
+      "type": "action",
+      "description": "Click checkout",
+      "risk": "low",
+      "locator": { "primary": { "kind": "test-id", "value": "checkout" } },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_fill_first_name",
+      "type": "action",
+      "description": "Fill first name",
+      "risk": "low",
+      "locator": { "primary": { "kind": "test-id", "value": "firstName" } },
+      "action": { "kind": "fill", "value": "{{first_name}}" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_fill_last_name",
+      "type": "action",
+      "description": "Fill last name",
+      "risk": "low",
+      "locator": { "primary": { "kind": "test-id", "value": "lastName" } },
+      "action": { "kind": "fill", "value": "{{last_name}}" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_fill_zip",
+      "type": "action",
+      "description": "Fill postal code",
+      "risk": "low",
+      "locator": { "primary": { "kind": "test-id", "value": "postalCode" } },
+      "action": { "kind": "fill", "value": "{{zip}}" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_click_continue",
+      "type": "action",
+      "description": "Click continue to order review",
+      "risk": "low",
+      "locator": { "primary": { "kind": "test-id", "value": "continue" } },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "fail_fast" }
+    },
+    {
+      "id": "step_click_finish",
+      "type": "action",
+      "description": "Confirm purchase — HIGH RISK, requires human approval",
+      "risk": "high",
+      "requires_approval": true,
+      "locator": { "primary": { "kind": "test-id", "value": "finish" } },
+      "action": { "kind": "click" },
+      "on_error": { "strategy": "human_escalate", "escalation_message": "Human approval required to finalize multi-item purchase" }
+    },
+    {
+      "id": "step_assert_success",
+      "type": "assert",
+      "description": "Verify order confirmation page",
+      "risk": "low",
+      "assert": {
+        "kind": "text_visible",
+        "expected": "Thank you for your order!",
+        "is_business_outcome": false
+      },
+      "on_error": { "strategy": "fail_fast" }
+    }
+  ]
+}
